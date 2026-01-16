@@ -1,0 +1,5 @@
+subscription_id     = "YOUR_SUBSCRIPTION_ID"
+sql_admin           = "YOUR_USERNAME"
+sql_password        = "YOUR_PASSWORD"
+aad_admin_login     = "YOUR_EMAIL"
+aad_admin_object_id = "YOUR_OBJECT_ID"
