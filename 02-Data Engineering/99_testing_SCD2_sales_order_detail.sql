@@ -28,8 +28,7 @@ SELECT
     LineTotal,
     ModifiedDate
 FROM SalesOrderDetail
-WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-ORDER BY SalesOrderDetailID
+ORDER BY SalesOrderID, SalesOrderDetailID
 LIMIT 5;
 
 -- COMMAND ----------
@@ -37,23 +36,19 @@ LIMIT 5;
 -- MAGIC %md
 -- MAGIC ### Modification d'une quantité et d'un prix unitaire
 -- MAGIC
--- MAGIC On modifie la quantité commandée et le prix unitaire pour déclencher l'historisation.
+-- MAGIC **IMPORTANT :** Remplacez les valeurs `71774` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
--- Sauvegarde de l'ID pour le test (à adapter selon vos données)
--- Exemple : modification de la première ligne de détail de la première commande
+-- Modification simple avec des valeurs explicites
+-- Remplacez 71774 et 1 par les valeurs réelles de votre table
 UPDATE SalesOrderDetail 
 SET 
     OrderQty = OrderQty + 1,
     UnitPrice = UnitPrice * 1.1,
     ModifiedDate = current_timestamp()
-WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-  AND SalesOrderDetailID = (
-      SELECT MIN(SalesOrderDetailID) 
-      FROM SalesOrderDetail 
-      WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-  );
+WHERE SalesOrderID = 71774
+  AND SalesOrderDetailID = 1;
 
 -- COMMAND ----------
 
@@ -72,8 +67,7 @@ SELECT
     ProductID,
     ModifiedDate
 FROM SalesOrderDetail
-WHERE SalesOrderID = (SELECT MAX(SalesOrderID) FROM SalesOrderDetail)
-ORDER BY SalesOrderDetailID
+ORDER BY SalesOrderID DESC, SalesOrderDetailID DESC
 LIMIT 5;
 
 -- COMMAND ----------
@@ -81,73 +75,52 @@ LIMIT 5;
 -- MAGIC %md
 -- MAGIC ### Suppression d'une ligne de détail
 -- MAGIC
--- MAGIC On supprime une ligne de commande pour tester la fermeture SCD2.
+-- MAGIC **IMPORTANT :** Remplacez les valeurs `71946` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
--- Suppression de la dernière ligne de détail de la dernière commande
+-- Suppression simple avec des valeurs explicites
+-- Remplacez 71946 et 1 par les valeurs réelles de votre table
 DELETE FROM SalesOrderDetail
-WHERE SalesOrderID = (SELECT MAX(SalesOrderID) FROM SalesOrderDetail)
-  AND SalesOrderDetailID = (
-      SELECT MAX(SalesOrderDetailID) 
-      FROM SalesOrderDetail 
-      WHERE SalesOrderID = (SELECT MAX(SalesOrderID) FROM SalesOrderDetail)
-  );
+WHERE SalesOrderID = 71946
+  AND SalesOrderDetailID = 1;
 
 -- COMMAND ----------
 
 -- MAGIC %md
 -- MAGIC ## Scénario 3 : Test d'insertion (INSERT)
 -- MAGIC
--- MAGIC Simulation d'une nouvelle ligne de commande (ou modification de clé composite pour simuler un INSERT).
+-- MAGIC Simulation d'une nouvelle ligne de commande en modifiant un SalesOrderDetailID existant.
 
 -- COMMAND ----------
 
--- Consultation des dernières lignes de détail
+-- Consultation : sélectionner un enregistrement pour le test
 SELECT 
     SalesOrderID,
     SalesOrderDetailID,
     OrderQty,
     ProductID,
-    UnitPrice,
-    ModifiedDate
+    UnitPrice
 FROM SalesOrderDetail
-ORDER BY SalesOrderID DESC, SalesOrderDetailID DESC
-LIMIT 10;
+ORDER BY SalesOrderID, SalesOrderDetailID
+LIMIT 5;
 
 -- COMMAND ----------
 
 -- MAGIC %md
--- MAGIC ### Simulation d'insertion par modification de clé composite
+-- MAGIC ### Modification d'un SalesOrderDetailID pour simuler un INSERT
 -- MAGIC
--- MAGIC Pour simuler un INSERT, on modifie la clé composite (SalesOrderID + SalesOrderDetailID) d'un enregistrement existant.
--- MAGIC Cela crée un nouvel enregistrement et ferme l'ancien.
+-- MAGIC **IMPORTANT :** Remplacez les valeurs `71774` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
--- Exemple : modification de la clé composite pour simuler un INSERT
--- ATTENTION : adapter les IDs selon vos données réelles
--- On prend un enregistrement existant et on modifie son SalesOrderDetailID
--- Approche simplifiée : identifier d'abord l'enregistrement, puis le modifier
--- Étape 1 : Identifier l'enregistrement cible
-SELECT 
-    SalesOrderID,
-    SalesOrderDetailID
-FROM SalesOrderDetail
-WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-ORDER BY SalesOrderDetailID DESC
-LIMIT 1;
-
--- COMMAND ----------
-
--- Étape 2 : Modification avec des valeurs explicites (remplacer par les valeurs de l'étape 1)
--- Exemple avec des valeurs fictives - À ADAPTER selon le résultat de l'étape 1
+-- Modification simple avec des valeurs explicites
+-- Remplacez 71774 et 1 par les valeurs réelles de votre table
 UPDATE SalesOrderDetail 
 SET SalesOrderDetailID = 999999,
     ModifiedDate = current_timestamp()
-WHERE SalesOrderID = 71774  -- Remplacer par la valeur réelle de l'étape 1
-  AND SalesOrderDetailID = 1  -- Remplacer par la valeur réelle de l'étape 1
-  AND SalesOrderDetailID < 999999; -- Éviter les conflits si l'ID existe déjà
+WHERE SalesOrderID = 71774
+  AND SalesOrderDetailID = 1;
 
 -- COMMAND ----------
 
@@ -176,6 +149,7 @@ USE SCHEMA silver;
 -- COMMAND ----------
 
 -- Vérification des mises à jour (plusieurs versions pour la même clé composite)
+-- Remplacez 71774 et 1 par les valeurs utilisées dans le test UPDATE
 SELECT 
     sales_order_id,
     sales_order_detail_id,
@@ -186,12 +160,8 @@ SELECT
     _tf_create_date,
     _tf_update_date
 FROM sales_order_detail
-WHERE sales_order_id = (SELECT MIN(sales_order_id) FROM sales_order_detail)
-  AND sales_order_detail_id = (
-      SELECT MIN(sales_order_detail_id) 
-      FROM sales_order_detail 
-      WHERE sales_order_id = (SELECT MIN(sales_order_id) FROM sales_order_detail)
-  )
+WHERE sales_order_id = 71774
+  AND sales_order_detail_id = 1
 ORDER BY _tf_valid_from;
 
 -- COMMAND ----------
@@ -204,6 +174,7 @@ ORDER BY _tf_valid_from;
 -- COMMAND ----------
 
 -- Vérification des suppressions (enregistrements fermés)
+-- Remplacez 71946 et 1 par les valeurs utilisées dans le test DELETE
 SELECT 
     sales_order_id,
     sales_order_detail_id,
@@ -213,9 +184,10 @@ SELECT
     _tf_valid_to,
     _tf_update_date
 FROM sales_order_detail
-WHERE sales_order_id = (SELECT MAX(sales_order_id) FROM sales_order_detail)
-  AND _tf_valid_to IS NOT NULL  -- Enregistrements fermés
-ORDER BY sales_order_detail_id, _tf_valid_from;
+WHERE sales_order_id = 71946
+  AND sales_order_detail_id = 1
+  AND _tf_valid_to IS NOT NULL  -- Enregistrement fermé
+ORDER BY _tf_valid_from;
 
 -- COMMAND ----------
 
@@ -227,6 +199,7 @@ ORDER BY sales_order_detail_id, _tf_valid_from;
 -- COMMAND ----------
 
 -- Vérification des insertions (nouveau SalesOrderDetailID)
+-- Remplacez 71774 par la valeur utilisée dans le test INSERT
 SELECT 
     sales_order_id,
     sales_order_detail_id,
@@ -237,14 +210,8 @@ SELECT
     _tf_valid_to,
     _tf_create_date
 FROM sales_order_detail
-WHERE sales_order_id = (SELECT MIN(sales_order_id) FROM sales_order_detail)
-  AND (sales_order_detail_id = 999999 
-       OR sales_order_detail_id = (
-           SELECT MAX(sales_order_detail_id) 
-           FROM sales_order_detail 
-           WHERE sales_order_id = (SELECT MIN(sales_order_id) FROM sales_order_detail)
-             AND sales_order_detail_id < 999999
-       ))
+WHERE sales_order_id = 71774
+  AND (sales_order_detail_id = 999999 OR sales_order_detail_id = 1)
 ORDER BY sales_order_detail_id, _tf_valid_from;
 
 -- COMMAND ----------
