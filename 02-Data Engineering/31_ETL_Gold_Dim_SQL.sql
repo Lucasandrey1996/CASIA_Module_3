@@ -162,3 +162,92 @@ WHEN NOT MATCHED THEN
     load_date,        -- _tf_create_date
     load_date         -- _tf_update_date
   )
+
+-- COMMAND ----------
+
+-- DIM_PRODUCT
+-- Source: `silver.product` + `silver.product_model` (enregistrements actifs) → enrichissement avec les infos de modèle
+MERGE INTO gold.dim_product AS tgt
+USING (
+    SELECT
+        CAST(p.product_id AS INT) AS prod_product_id,
+        COALESCE(TRY_CAST(p.name AS STRING), 'N/A') AS prod_name,
+        COALESCE(TRY_CAST(p.product_number AS STRING), 'N/A') AS prod_product_number,
+        COALESCE(TRY_CAST(p.color AS STRING), 'N/A') AS prod_color,
+        COALESCE(TRY_CAST(p.standard_cost AS DECIMAL(19, 4)), 0) AS prod_standard_cost,
+        COALESCE(TRY_CAST(p.list_price AS DECIMAL(19, 4)), 0) AS prod_list_price,
+        COALESCE(TRY_CAST(p.size AS STRING), 'N/A') AS prod_size,
+        COALESCE(TRY_CAST(p.weight AS DECIMAL(19, 4)), 0) AS prod_weight,
+        COALESCE(TRY_CAST(p.product_category_id AS INT), 0) AS prod_product_category_id,
+        COALESCE(TRY_CAST(p.product_model_id AS INT), 0) AS prod_product_model_id,
+        COALESCE(TRY_CAST(pm.name AS STRING), 'N/A') AS prod_product_model_name,
+        COALESCE(TRY_CAST(pm.catalog_description AS STRING), 'N/A') AS prod_product_model_catalog_description
+    FROM silver.product p
+    LEFT OUTER JOIN silver.product_model pm
+      ON p.product_model_id = pm.product_model_id AND pm._tf_valid_to IS NULL
+    WHERE p._tf_valid_to IS NULL
+) AS src
+ON tgt.prod_product_id = src.prod_product_id
+
+-- 1) Update existing records when a difference is detected
+WHEN MATCHED AND (
+    tgt.prod_name != src.prod_name OR
+    tgt.prod_product_number != src.prod_product_number OR
+    tgt.prod_color != src.prod_color OR
+    tgt.prod_standard_cost != src.prod_standard_cost OR
+    tgt.prod_list_price != src.prod_list_price OR
+    tgt.prod_size != src.prod_size OR
+    tgt.prod_weight != src.prod_weight OR
+    tgt.prod_product_category_id != src.prod_product_category_id OR
+    tgt.prod_product_model_id != src.prod_product_model_id OR
+    tgt.prod_product_model_name != src.prod_product_model_name OR
+    tgt.prod_product_model_catalog_description != src.prod_product_model_catalog_description
+) THEN
+  UPDATE SET
+    tgt.prod_name = src.prod_name,
+    tgt.prod_product_number = src.prod_product_number,
+    tgt.prod_color = src.prod_color,
+    tgt.prod_standard_cost = src.prod_standard_cost,
+    tgt.prod_list_price = src.prod_list_price,
+    tgt.prod_size = src.prod_size,
+    tgt.prod_weight = src.prod_weight,
+    tgt.prod_product_category_id = src.prod_product_category_id,
+    tgt.prod_product_model_id = src.prod_product_model_id,
+    tgt.prod_product_model_name = src.prod_product_model_name,
+    tgt.prod_product_model_catalog_description = src.prod_product_model_catalog_description,
+    tgt._tf_update_date = load_date
+
+-- 2) Insert new records
+WHEN NOT MATCHED THEN
+  INSERT (
+    prod_product_id,
+    prod_name,
+    prod_product_number,
+    prod_color,
+    prod_standard_cost,
+    prod_list_price,
+    prod_size,
+    prod_weight,
+    prod_product_category_id,
+    prod_product_model_id,
+    prod_product_model_name,
+    prod_product_model_catalog_description,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.prod_product_id,
+    src.prod_name,
+    src.prod_product_number,
+    src.prod_color,
+    src.prod_standard_cost,
+    src.prod_list_price,
+    src.prod_size,
+    src.prod_weight,
+    src.prod_product_category_id,
+    src.prod_product_model_id,
+    src.prod_product_model_name,
+    src.prod_product_model_catalog_description,
+    load_date,
+    load_date
+  )
