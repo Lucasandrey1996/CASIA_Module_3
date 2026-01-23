@@ -47,6 +47,12 @@ Les tables Silver sont créées avec :
 **Tables créées :**
 - `silver.address`
 - `silver.customer`
+- `silver.customer_address`
+- `silver.product`
+- `silver.product_category`
+- `silver.product_description`
+- `silver.product_model`
+- `silver.product_model_product_description`
 - `silver.sales_order_header`
 - `silver.sales_order_detail`
 
@@ -100,10 +106,25 @@ Copie directe des données source vers Bronze. Aucune transformation n'est appli
    - Source : `lua_adventureworks.saleslt.ProductCategory`
 
 5. **Address** : Adresses
-   - Source : `adventureworks.saleslt.address`
+   - Source : `lua_adventureworks.saleslt.Address`
 
 6. **Customer** : Clients
    - Source : `lua_adventureworks.saleslt.Customer`
+
+7. **CustomerAddress** : Association client ↔ adresse
+   - Source : `lua_adventureworks.saleslt.CustomerAddress`
+
+8. **ProductDescription** : Descriptions de produits
+   - Source : `lua_adventureworks.saleslt.ProductDescription`
+
+9. **ProductModel** : Modèles de produits
+   - Source : `lua_adventureworks.saleslt.ProductModel`
+
+10. **ProductModelProductDescription** : Association modèle ↔ description (culture)
+   - Source : `lua_adventureworks.saleslt.ProductModelProductDescription`
+
+### Exclusions (metadata)
+Les tables de metadata ne sont **pas** chargées dans Bronze (ex. `dbo.ErrorLog`, `dbo.BuildVersion`) : on ingère uniquement les tables du schéma `SalesLT`.
 
 ### Méthode
 Utilisation de `CREATE OR REPLACE TABLE ... AS SELECT *` pour une copie complète à chaque exécution.
@@ -165,6 +186,33 @@ Pour chaque table, le processus utilise deux opérations `MERGE` successives :
 #### 3.4 Table `sales_order_header`
 - Clé : `sales_order_id`
 - Suivi des modifications sur tous les attributs de commande (revision_number, order_date, due_date, ship_date, status, online_order_flag, sales_order_number, purchase_order_number, account_number, customer_id, ship_to_address_id, bill_to_address_id, ship_method, credit_card_approval_code, sub_total, tax_amt, freight, total_due, comment, rowguid, modified_date)
+
+#### 3.5 Table `customer_address`
+- Clé composite : `customer_id` + `address_id`
+- Suivi des modifications sur : address_type, rowguid, modified_date
+
+#### 3.6 Table `product_category`
+- Clé : `product_category_id`
+- Suivi des modifications sur : parent_product_category_id, name, rowguid, modified_date
+
+#### 3.7 Table `product_description`
+- Clé : `product_description_id`
+- Suivi des modifications sur : description, rowguid, modified_date
+
+#### 3.8 Table `product_model`
+- Clé : `product_model_id`
+- Suivi des modifications sur : name, catalog_description, rowguid, modified_date
+
+#### 3.9 Table `product_model_product_description`
+- Clé composite : `product_model_id` + `product_description_id` + `culture`
+- Suivi des modifications sur : rowguid, modified_date
+
+#### 3.10 Table `product`
+- Clé : `product_id`
+- Suivi des modifications sur : l’ensemble des attributs produit (dont product_number, color, standard_cost, list_price, size, weight, product_category_id, product_model_id, sell_start_date, sell_end_date, discontinued_date, thumbnail_photo, thumbnail_photo_file_name, rowguid, modified_date)
+
+### Note (scripts Bronze SQL vs PySpark)
+Si vous utilisez `12_ETL_Bronze_PySpark.py` au lieu de `11_ETL_Bronze_SQL.sql`, vérifiez qu’il charge bien aussi les tables ajoutées (CustomerAddress, ProductDescription, ProductModel, ProductModelProductDescription), sinon l’ETL Silver échouera sur des tables Bronze manquantes.
 
 ### Variable de chargement
 - `load_date` : Timestamp unique pour chaque exécution, utilisé pour `_tf_valid_from` et `_tf_valid_to`

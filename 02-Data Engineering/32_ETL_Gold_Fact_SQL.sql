@@ -8,46 +8,57 @@
 USE CATALOG lua_lakehouse;
 USE SCHEMA gold;
 
+-- Timestamp de référence unique pour la session de chargement
 DECLARE OR REPLACE load_date = current_timestamp();
 VALUES load_date;
 
 -- COMMAND ----------
 
+-- Préparation de la FACT: projection + jointures vers les dimensions
+-- Objectif: calculer les clés de dimensions (calendar/customer/geography) et les mesures, sur les enregistrements SCD2 actifs
 CREATE OR REPLACE TEMP VIEW _tmp_fact_sales AS
 SELECT
+    -- Identifiants source (grain: ligne de commande)
     CAST(soh.sales_order_id AS INT) AS sales_order_id,
     CAST(sod.sales_order_detail_id AS INT) AS sales_order_detail_id,
 
-    --
+    -- Clés de dimensions (avec valeurs de repli: -9 = "N/A")
     10000 * YEAR(soh.order_date) + 100 * MONTH(soh.order_date) + DAY(soh.order_date) AS _tf_dim_calendar_id,
     COALESCE(cust._tf_dim_customer_id, -9) AS _tf_dim_customer_id,
     COALESCE(geo._tf_dim_geography_id, -9) AS _tf_dim_geography_id,
 
-    --
+    -- Mesures (cast + valeurs par défaut si NULL)
     COALESCE(TRY_CAST(sod.order_qty AS SMALLINT), 0) AS sales_order_qty,
     COALESCE(TRY_CAST(sod.unit_price AS DECIMAL(19,4)), 0) AS sales_unit_price,
     COALESCE(TRY_CAST(sod.unit_price_discount AS DECIMAL(19,4)), 0) AS sales_unit_price_discount,
     COALESCE(TRY_CAST(sod.line_total AS DECIMAL(38, 6)), 0) AS sales_line_total
 
   FROM silver.sales_order_detail sod
+    -- SCD2: ne garder que les versions actives côté Silver
     LEFT OUTER JOIN silver.sales_order_header soh 
       ON sod.sales_order_id = soh.sales_order_id AND soh._tf_valid_to IS NULL
       LEFT OUTER JOIN silver.customer c 
         ON soh.customer_id = c.customer_id AND c._tf_valid_to IS NULL
         LEFT OUTER JOIN gold.dim_customer cust
+          -- Mapping vers la clé surrogée client
           ON c.customer_id = cust.cust_customer_id
       LEFT OUTER JOIN silver.address a 
         ON soh.bill_to_address_id = a.address_id AND a._tf_valid_to IS NULL
         LEFT OUTER JOIN gold.dim_geography geo 
+          -- Mapping vers la clé surrogée géographie
           ON a.address_id = geo.geo_address_id
+  -- Grain: uniquement les lignes de commande actives
   WHERE sod._tf_valid_to IS NULL;
 
+-- Contrôle visuel (optionnel) de la vue temporaire
 SELECT * FROM _tmp_fact_sales;
 
 -- COMMAND ----------
 
+-- Chargement incrémental de la table de faits (upsert)
 MERGE INTO gold.fact_sales AS tgt
 USING _tmp_fact_sales AS src
+-- Clé de correspondance au grain de la table de faits
 ON tgt.sales_order_detail_id = src.sales_order_detail_id 
   AND tgt.sales_order_id = src.sales_order_id
 

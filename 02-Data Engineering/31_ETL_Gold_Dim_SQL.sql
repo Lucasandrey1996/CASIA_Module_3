@@ -8,15 +8,20 @@
 USE CATALOG lua_lakehouse;
 USE SCHEMA gold;
 
+-- Timestamp de référence unique pour la session de chargement
 DECLARE OR REPLACE load_date = current_timestamp();
 VALUES load_date;
 
 -- COMMAND ----------
 
+-- DIM_GEOGRAPHY
+-- Source: `silver.address` (uniquement les enregistrements actifs) → normalisation + valeurs par défaut
 MERGE INTO gold.dim_geography AS tgt
 USING (
     SELECT
+        -- Clé naturelle de la source (réutilisée comme clé de correspondance)
         CAST(address_id AS INT) AS geo_address_id,
+        -- Nettoyage: cast + valeur 'N/A' par défaut si NULL
         COALESCE(TRY_CAST(address_line1 AS STRING), 'N/A') AS geo_address_line_1,
         COALESCE(TRY_CAST(address_line2 AS STRING), 'N/A') AS geo_address_line_2,
         COALESCE(TRY_CAST(city AS STRING), 'N/A') AS geo_city,
@@ -24,8 +29,10 @@ USING (
         COALESCE(TRY_CAST(country_region AS STRING), 'N/A') AS geo_country_region,
         COALESCE(TRY_CAST(postal_code AS STRING), 'N/A') AS geo_postal_code
     FROM silver.address
+    -- SCD2: on ne charge en Gold que la version active
     WHERE _tf_valid_to IS NULL
 ) AS src
+-- Alignement: mise à jour/insertion par clé adresse
 ON tgt.geo_address_id = src.geo_address_id
 
 -- 1) Update existing records when a difference is detected
@@ -75,10 +82,14 @@ WHEN NOT MATCHED THEN
 
 -- COMMAND ----------
 
+-- DIM_CUSTOMER
+-- Source: `silver.customer` (enregistrements actifs) → attributs “analytics-ready” (sans champs sensibles)
 MERGE INTO gold.dim_customer AS tgt
 USING (
     SELECT
+        -- Clé naturelle de la source (réutilisée comme clé de correspondance)
         CAST(customer_id AS INT) AS cust_customer_id,
+        -- Nettoyage: cast + valeur 'N/A' par défaut si NULL
         COALESCE(TRY_CAST(title AS STRING), 'N/A') AS cust_title,
         COALESCE(TRY_CAST(first_name AS STRING), 'N/A') AS cust_first_name,
         COALESCE(TRY_CAST(middle_name AS STRING), 'N/A') AS cust_middle_name,
@@ -89,8 +100,10 @@ USING (
         COALESCE(TRY_CAST(email_address AS STRING), 'N/A') AS cust_email_address,
         COALESCE(TRY_CAST(phone AS STRING), 'N/A') AS cust_phone
     FROM silver.customer
+    -- SCD2: on ne charge en Gold que la version active
     WHERE _tf_valid_to IS NULL
 ) AS src
+-- Alignement: mise à jour/insertion par clé client
 ON tgt.cust_customer_id = src.cust_customer_id
 
 -- 1) Update existing records when a difference is detected
