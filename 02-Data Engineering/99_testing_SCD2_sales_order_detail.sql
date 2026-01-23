@@ -128,14 +128,25 @@ LIMIT 10;
 -- Exemple : modification de la clé composite pour simuler un INSERT
 -- ATTENTION : adapter les IDs selon vos données réelles
 -- On prend un enregistrement existant et on modifie son SalesOrderDetailID
-UPDATE SalesOrderDetail 
-SET SalesOrderDetailID = 999999
+-- Approche simplifiée : identifier d'abord l'enregistrement, puis le modifier
+-- Étape 1 : Identifier l'enregistrement cible
+SELECT 
+    SalesOrderID,
+    SalesOrderDetailID
+FROM SalesOrderDetail
 WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-  AND SalesOrderDetailID = (
-      SELECT MAX(SalesOrderDetailID) 
-      FROM SalesOrderDetail 
-      WHERE SalesOrderID = (SELECT MIN(SalesOrderID) FROM SalesOrderDetail)
-  )
+ORDER BY SalesOrderDetailID DESC
+LIMIT 1;
+
+-- COMMAND ----------
+
+-- Étape 2 : Modification avec des valeurs explicites (remplacer par les valeurs de l'étape 1)
+-- Exemple avec des valeurs fictives - À ADAPTER selon le résultat de l'étape 1
+UPDATE SalesOrderDetail 
+SET SalesOrderDetailID = 999999,
+    ModifiedDate = current_timestamp()
+WHERE SalesOrderID = 71774  -- Remplacer par la valeur réelle de l'étape 1
+  AND SalesOrderDetailID = 1  -- Remplacer par la valeur réelle de l'étape 1
   AND SalesOrderDetailID < 999999; -- Éviter les conflits si l'ID existe déjà
 
 -- COMMAND ----------
