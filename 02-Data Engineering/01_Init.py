@@ -150,6 +150,137 @@
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.customer_address (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     customer_id INT,
+# MAGIC     address_id INT,
+# MAGIC     address_type STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.product_category (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     product_category_id INT,
+# MAGIC     parent_product_category_id INT,
+# MAGIC     name STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.product_description (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     product_description_id INT,
+# MAGIC     description STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.product_model (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     product_model_id INT,
+# MAGIC     name STRING,
+# MAGIC     catalog_description STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.product_model_product_description (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     product_model_id INT,
+# MAGIC     product_description_id INT,
+# MAGIC     culture STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE silver.product (
+# MAGIC     _tf_id BIGINT GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) PRIMARY KEY NOT NULL,
+# MAGIC
+# MAGIC     -- Source table columns
+# MAGIC     product_id INT,
+# MAGIC     name STRING,
+# MAGIC     product_number STRING,
+# MAGIC     color STRING,
+# MAGIC     standard_cost DECIMAL(19,4),
+# MAGIC     list_price DECIMAL(19,4),
+# MAGIC     size STRING,
+# MAGIC     weight DECIMAL(19,4),
+# MAGIC     product_category_id INT,
+# MAGIC     product_model_id INT,
+# MAGIC     sell_start_date TIMESTAMP,
+# MAGIC     sell_end_date TIMESTAMP,
+# MAGIC     discontinued_date TIMESTAMP,
+# MAGIC     thumbnail_photo BINARY,
+# MAGIC     thumbnail_photo_file_name STRING,
+# MAGIC     rowguid CHAR(36),
+# MAGIC     modified_date TIMESTAMP,
+# MAGIC
+# MAGIC     -- Technical columns
+# MAGIC     _tf_valid_from TIMESTAMP,
+# MAGIC     _tf_valid_to TIMESTAMP,
+# MAGIC     _tf_create_date TIMESTAMP,
+# MAGIC     _tf_update_date TIMESTAMP
+# MAGIC )
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ## Create tables in Gold
 

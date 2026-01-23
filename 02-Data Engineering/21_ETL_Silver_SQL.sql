@@ -503,3 +503,511 @@ WHEN NOT MATCHED THEN
     load_date,        -- _tf_create_date
     load_date         -- _tf_update_date
   )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of customer_address
+
+-- COMMAND ----------
+
+MERGE INTO silver.customer_address AS tgt
+USING (
+    SELECT
+        CustomerID    AS customer_id,
+        AddressID     AS address_id,
+        AddressType   AS address_type,
+        rowguid       AS rowguid,
+        ModifiedDate  AS modified_date
+    FROM bronze.customeraddress
+) AS src
+ON tgt.customer_id = src.customer_id
+   AND tgt.address_id = src.address_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.address_type   != src.address_type
+    OR tgt.rowguid        != src.rowguid
+    OR tgt.modified_date  != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.customer_address AS tgt
+USING (
+    SELECT
+        CustomerID    AS customer_id,
+        AddressID     AS address_id,
+        AddressType   AS address_type,
+        rowguid       AS rowguid,
+        ModifiedDate  AS modified_date
+    FROM bronze.customeraddress
+) AS src
+ON tgt.customer_id = src.customer_id
+   AND tgt.address_id = src.address_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    customer_id,
+    address_id,
+    address_type,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.customer_id,
+    src.address_id,
+    src.address_type,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of product_category
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_category AS tgt
+USING (
+    SELECT
+        ProductCategoryID        AS product_category_id,
+        ParentProductCategoryID  AS parent_product_category_id,
+        Name                     AS name,
+        rowguid                  AS rowguid,
+        ModifiedDate             AS modified_date
+    FROM bronze.productcategory
+) AS src
+ON tgt.product_category_id = src.product_category_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.parent_product_category_id != src.parent_product_category_id
+    OR tgt.name                       != src.name
+    OR tgt.rowguid                    != src.rowguid
+    OR tgt.modified_date              != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_category AS tgt
+USING (
+    SELECT
+        ProductCategoryID        AS product_category_id,
+        ParentProductCategoryID  AS parent_product_category_id,
+        Name                     AS name,
+        rowguid                  AS rowguid,
+        ModifiedDate             AS modified_date
+    FROM bronze.productcategory
+) AS src
+ON tgt.product_category_id = src.product_category_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    product_category_id,
+    parent_product_category_id,
+    name,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.product_category_id,
+    src.parent_product_category_id,
+    src.name,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of product_description
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_description AS tgt
+USING (
+    SELECT
+        ProductDescriptionID  AS product_description_id,
+        Description           AS description,
+        rowguid               AS rowguid,
+        ModifiedDate          AS modified_date
+    FROM bronze.productdescription
+) AS src
+ON tgt.product_description_id = src.product_description_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.description    != src.description
+    OR tgt.rowguid        != src.rowguid
+    OR tgt.modified_date  != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_description AS tgt
+USING (
+    SELECT
+        ProductDescriptionID  AS product_description_id,
+        Description           AS description,
+        rowguid               AS rowguid,
+        ModifiedDate          AS modified_date
+    FROM bronze.productdescription
+) AS src
+ON tgt.product_description_id = src.product_description_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    product_description_id,
+    description,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.product_description_id,
+    src.description,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of product_model
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_model AS tgt
+USING (
+    SELECT
+        ProductModelID     AS product_model_id,
+        Name               AS name,
+        CatalogDescription AS catalog_description,
+        rowguid            AS rowguid,
+        ModifiedDate       AS modified_date
+    FROM bronze.productmodel
+) AS src
+ON tgt.product_model_id = src.product_model_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.name                != src.name
+    OR tgt.catalog_description != src.catalog_description
+    OR tgt.rowguid             != src.rowguid
+    OR tgt.modified_date       != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_model AS tgt
+USING (
+    SELECT
+        ProductModelID     AS product_model_id,
+        Name               AS name,
+        CatalogDescription AS catalog_description,
+        rowguid            AS rowguid,
+        ModifiedDate       AS modified_date
+    FROM bronze.productmodel
+) AS src
+ON tgt.product_model_id = src.product_model_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    product_model_id,
+    name,
+    catalog_description,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.product_model_id,
+    src.name,
+    src.catalog_description,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of product_model_product_description
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_model_product_description AS tgt
+USING (
+    SELECT
+        ProductModelID        AS product_model_id,
+        ProductDescriptionID  AS product_description_id,
+        Culture               AS culture,
+        rowguid               AS rowguid,
+        ModifiedDate          AS modified_date
+    FROM bronze.productmodelproductdescription
+) AS src
+ON tgt.product_model_id = src.product_model_id
+   AND tgt.product_description_id = src.product_description_id
+   AND tgt.culture = src.culture
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.rowguid        != src.rowguid
+    OR tgt.modified_date  != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.product_model_product_description AS tgt
+USING (
+    SELECT
+        ProductModelID        AS product_model_id,
+        ProductDescriptionID  AS product_description_id,
+        Culture               AS culture,
+        rowguid               AS rowguid,
+        ModifiedDate          AS modified_date
+    FROM bronze.productmodelproductdescription
+) AS src
+ON tgt.product_model_id = src.product_model_id
+   AND tgt.product_description_id = src.product_description_id
+   AND tgt.culture = src.culture
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    product_model_id,
+    product_description_id,
+    culture,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.product_model_id,
+    src.product_description_id,
+    src.culture,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Incremental load of product
+
+-- COMMAND ----------
+
+MERGE INTO silver.product AS tgt
+USING (
+    SELECT
+        ProductID               AS product_id,
+        Name                    AS name,
+        ProductNumber           AS product_number,
+        Color                   AS color,
+        StandardCost            AS standard_cost,
+        ListPrice               AS list_price,
+        Size                    AS size,
+        Weight                  AS weight,
+        ProductCategoryID       AS product_category_id,
+        ProductModelID          AS product_model_id,
+        SellStartDate           AS sell_start_date,
+        SellEndDate             AS sell_end_date,
+        DiscontinuedDate        AS discontinued_date,
+        ThumbNailPhoto          AS thumbnail_photo,
+        ThumbnailPhotoFileName  AS thumbnail_photo_file_name,
+        rowguid                 AS rowguid,
+        ModifiedDate            AS modified_date
+    FROM bronze.product
+) AS src
+ON tgt.product_id = src.product_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN MATCHED AND (
+       tgt.name                     != src.name
+    OR tgt.product_number           != src.product_number
+    OR tgt.color                    != src.color
+    OR tgt.standard_cost            != src.standard_cost
+    OR tgt.list_price               != src.list_price
+    OR tgt.size                     != src.size
+    OR tgt.weight                   != src.weight
+    OR tgt.product_category_id      != src.product_category_id
+    OR tgt.product_model_id         != src.product_model_id
+    OR tgt.sell_start_date          != src.sell_start_date
+    OR tgt.sell_end_date            != src.sell_end_date
+    OR tgt.discontinued_date        != src.discontinued_date
+    OR tgt.thumbnail_photo          != src.thumbnail_photo
+    OR tgt.thumbnail_photo_file_name != src.thumbnail_photo_file_name
+    OR tgt.rowguid                  != src.rowguid
+    OR tgt.modified_date            != src.modified_date
+) AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+
+WHEN NOT MATCHED BY SOURCE AND tgt._tf_valid_to IS NULL THEN
+  UPDATE SET
+    tgt._tf_valid_to    = load_date,
+    tgt._tf_update_date = load_date
+;
+
+-- COMMAND ----------
+
+MERGE INTO silver.product AS tgt
+USING (
+    SELECT
+        ProductID               AS product_id,
+        Name                    AS name,
+        ProductNumber           AS product_number,
+        Color                   AS color,
+        StandardCost            AS standard_cost,
+        ListPrice               AS list_price,
+        Size                    AS size,
+        Weight                  AS weight,
+        ProductCategoryID       AS product_category_id,
+        ProductModelID          AS product_model_id,
+        SellStartDate           AS sell_start_date,
+        SellEndDate             AS sell_end_date,
+        DiscontinuedDate        AS discontinued_date,
+        ThumbNailPhoto          AS thumbnail_photo,
+        ThumbnailPhotoFileName  AS thumbnail_photo_file_name,
+        rowguid                 AS rowguid,
+        ModifiedDate            AS modified_date
+    FROM bronze.product
+) AS src
+ON tgt.product_id = src.product_id
+   AND tgt._tf_valid_to IS NULL
+
+WHEN NOT MATCHED THEN
+  INSERT (
+    product_id,
+    name,
+    product_number,
+    color,
+    standard_cost,
+    list_price,
+    size,
+    weight,
+    product_category_id,
+    product_model_id,
+    sell_start_date,
+    sell_end_date,
+    discontinued_date,
+    thumbnail_photo,
+    thumbnail_photo_file_name,
+    rowguid,
+    modified_date,
+    _tf_valid_from,
+    _tf_valid_to,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.product_id,
+    src.name,
+    src.product_number,
+    src.color,
+    src.standard_cost,
+    src.list_price,
+    src.size,
+    src.weight,
+    src.product_category_id,
+    src.product_model_id,
+    src.sell_start_date,
+    src.sell_end_date,
+    src.discontinued_date,
+    src.thumbnail_photo,
+    src.thumbnail_photo_file_name,
+    src.rowguid,
+    src.modified_date,
+    load_date,
+    NULL,
+    load_date,
+    load_date
+  )

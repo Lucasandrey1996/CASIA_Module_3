@@ -64,7 +64,7 @@ AS SELECT * FROM lua_adventureworks.saleslt.ProductCategory;
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE address 
-AS SELECT * FROM adventureworks.saleslt.address;
+AS SELECT * FROM lua_adventureworks.saleslt.Address;
 
 -- COMMAND ----------
 
@@ -75,3 +75,43 @@ AS SELECT * FROM adventureworks.saleslt.address;
 
 CREATE OR REPLACE TABLE Customer 
 AS SELECT * FROM lua_adventureworks.saleslt.Customer;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Ingestion of CustomerAddress
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE CustomerAddress
+AS SELECT * FROM lua_adventureworks.saleslt.CustomerAddress;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Ingestion of ProductDescription
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE ProductDescription
+AS SELECT * FROM lua_adventureworks.saleslt.ProductDescription;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Ingestion of ProductModel
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE ProductModel
+AS SELECT * FROM lua_adventureworks.saleslt.ProductModel;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Ingestion of ProductModelProductDescription
+
+-- COMMAND ----------
+
+CREATE OR REPLACE TABLE ProductModelProductDescription
+AS SELECT * FROM lua_adventureworks.saleslt.ProductModelProductDescription;
