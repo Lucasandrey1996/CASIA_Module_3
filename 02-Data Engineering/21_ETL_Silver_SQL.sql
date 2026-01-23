@@ -6,7 +6,7 @@
 
 -- COMMAND ----------
 
-USE CATALOG levkiwi_lakehouse;
+USE CATALOG lua_lakehouse;
 USE DATABASE silver;
 
 -- COMMAND ----------
@@ -22,7 +22,7 @@ VALUES load_date;
 -- COMMAND ----------
 
 MERGE INTO silver.address AS tgt
-USING (
+USING ( -- Prepare table with the new data to be loaded
     SELECT
         AddressID       AS address_id,
         AddressLine1    AS address_line1,
