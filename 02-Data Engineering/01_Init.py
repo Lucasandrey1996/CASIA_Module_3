@@ -533,7 +533,6 @@
 # MAGIC   0,
 # MAGIC   'N/A',
 # MAGIC   0,
-# MAGIC   0,
 # MAGIC   -9,
 # MAGIC   0,
 # MAGIC   'N/A',
