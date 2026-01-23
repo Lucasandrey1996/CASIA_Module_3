@@ -69,3 +69,28 @@ LEFT JOIN dim_product_category pc
   ON p._tf_dim_product_category_id = pc._tf_dim_product_category_id
 ORDER BY p.prod_product_id
 LIMIT 20;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC ## Test de jointure avec fact_sales
+
+-- COMMAND ----------
+
+-- Vérification de la relation fact_sales ↔ dim_product ↔ dim_product_category
+SELECT 
+    f.sales_order_id,
+    f.sales_order_detail_id,
+    f.sales_order_qty,
+    f.sales_line_total,
+    p.prod_name,
+    p.prod_list_price,
+    pc.prod_cat_level_1_name AS category_level_1,
+    pc.prod_cat_level_2_name AS category_level_2
+FROM fact_sales f
+LEFT JOIN dim_product p
+  ON f._tf_dim_product_id = p._tf_dim_product_id
+LEFT JOIN dim_product_category pc
+  ON p._tf_dim_product_category_id = pc._tf_dim_product_category_id
+ORDER BY f.sales_order_id, f.sales_order_detail_id
+LIMIT 20;
