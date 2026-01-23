@@ -5,7 +5,7 @@
 
 -- COMMAND ----------
 
-USE CATALOG levkiwi_lakehouse;
+USE CATALOG lua_lakehouse;
 USE SCHEMA gold;
 
 DECLARE OR REPLACE load_date = current_timestamp();
