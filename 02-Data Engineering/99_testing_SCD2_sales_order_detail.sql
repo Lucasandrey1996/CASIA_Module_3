@@ -35,8 +35,6 @@ LIMIT 5;
 
 -- MAGIC %md
 -- MAGIC ### Modification d'une quantité et d'un prix unitaire
--- MAGIC
--- MAGIC **IMPORTANT :** Remplacez les valeurs `71774` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
@@ -48,7 +46,7 @@ SET
     UnitPrice = UnitPrice * 1.1,
     ModifiedDate = current_timestamp()
 WHERE SalesOrderID = 71774
-  AND SalesOrderDetailID = 1;
+  AND SalesOrderDetailID = 110562;
 
 -- COMMAND ----------
 
@@ -74,8 +72,6 @@ LIMIT 5;
 
 -- MAGIC %md
 -- MAGIC ### Suppression d'une ligne de détail
--- MAGIC
--- MAGIC **IMPORTANT :** Remplacez les valeurs `71946` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
@@ -83,7 +79,7 @@ LIMIT 5;
 -- Remplacez 71946 et 1 par les valeurs réelles de votre table
 DELETE FROM SalesOrderDetail
 WHERE SalesOrderID = 71946
-  AND SalesOrderDetailID = 1;
+  AND SalesOrderDetailID = 113406;
 
 -- COMMAND ----------
 
@@ -109,8 +105,6 @@ LIMIT 5;
 
 -- MAGIC %md
 -- MAGIC ### Modification d'un SalesOrderDetailID pour simuler un INSERT
--- MAGIC
--- MAGIC **IMPORTANT :** Remplacez les valeurs `71774` et `1` par des IDs réels de votre table (voir la requête ci-dessus).
 
 -- COMMAND ----------
 
@@ -120,7 +114,7 @@ UPDATE SalesOrderDetail
 SET SalesOrderDetailID = 999999,
     ModifiedDate = current_timestamp()
 WHERE SalesOrderID = 71774
-  AND SalesOrderDetailID = 1;
+  AND SalesOrderDetailID = 110563;
 
 -- COMMAND ----------
 
@@ -161,7 +155,7 @@ SELECT
     _tf_update_date
 FROM sales_order_detail
 WHERE sales_order_id = 71774
-  AND sales_order_detail_id = 1
+  AND sales_order_detail_id = 110562
 ORDER BY _tf_valid_from;
 
 -- COMMAND ----------
@@ -185,7 +179,7 @@ SELECT
     _tf_update_date
 FROM sales_order_detail
 WHERE sales_order_id = 71946
-  AND sales_order_detail_id = 1
+  AND sales_order_detail_id = 113406
   AND _tf_valid_to IS NOT NULL  -- Enregistrement fermé
 ORDER BY _tf_valid_from;
 
@@ -211,7 +205,7 @@ SELECT
     _tf_create_date
 FROM sales_order_detail
 WHERE sales_order_id = 71774
-  AND (sales_order_detail_id = 999999 OR sales_order_detail_id = 1)
+  AND (sales_order_detail_id = 999999 OR sales_order_detail_id = 110563)
 ORDER BY sales_order_detail_id, _tf_valid_from;
 
 -- COMMAND ----------
