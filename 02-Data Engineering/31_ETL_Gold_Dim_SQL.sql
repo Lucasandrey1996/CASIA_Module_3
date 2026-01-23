@@ -165,8 +165,91 @@ WHEN NOT MATCHED THEN
 
 -- COMMAND ----------
 
+-- DIM_PRODUCT_CATEGORY
+-- Source: `silver.product_category` (enregistrements actifs) → hiérarchie parent/enfant avec niveaux
+MERGE INTO gold.dim_product_category AS tgt
+USING (
+    SELECT
+        CAST(pc.product_category_id AS INT) AS prod_cat_category_id,
+        COALESCE(TRY_CAST(pc.name AS STRING), 'N/A') AS prod_cat_name,
+        COALESCE(TRY_CAST(pc.parent_product_category_id AS INT), 0) AS prod_cat_parent_category_id,
+        -- Niveau 1: catégorie racine (parent IS NULL ou parent = 0)
+        CASE 
+            WHEN pc.parent_product_category_id IS NULL OR pc.parent_product_category_id = 0 
+            THEN CAST(pc.product_category_id AS INT)
+            ELSE CAST(parent_pc.product_category_id AS INT)
+        END AS prod_cat_level_1_id,
+        CASE 
+            WHEN pc.parent_product_category_id IS NULL OR pc.parent_product_category_id = 0 
+            THEN COALESCE(TRY_CAST(pc.name AS STRING), 'N/A')
+            ELSE COALESCE(TRY_CAST(parent_pc.name AS STRING), 'N/A')
+        END AS prod_cat_level_1_name,
+        -- Niveau 2: sous-catégorie (si parent existe)
+        CASE 
+            WHEN pc.parent_product_category_id IS NOT NULL AND pc.parent_product_category_id != 0 
+            THEN CAST(pc.product_category_id AS INT)
+            ELSE 0
+        END AS prod_cat_level_2_id,
+        CASE 
+            WHEN pc.parent_product_category_id IS NOT NULL AND pc.parent_product_category_id != 0 
+            THEN COALESCE(TRY_CAST(pc.name AS STRING), 'N/A')
+            ELSE 'N/A'
+        END AS prod_cat_level_2_name
+    FROM silver.product_category pc
+    LEFT OUTER JOIN silver.product_category parent_pc
+      ON pc.parent_product_category_id = parent_pc.product_category_id 
+      AND parent_pc._tf_valid_to IS NULL
+    WHERE pc._tf_valid_to IS NULL
+) AS src
+ON tgt.prod_cat_category_id = src.prod_cat_category_id
+
+-- 1) Update existing records when a difference is detected
+WHEN MATCHED AND (
+    tgt.prod_cat_name != src.prod_cat_name OR
+    tgt.prod_cat_parent_category_id != src.prod_cat_parent_category_id OR
+    tgt.prod_cat_level_1_id != src.prod_cat_level_1_id OR
+    tgt.prod_cat_level_1_name != src.prod_cat_level_1_name OR
+    tgt.prod_cat_level_2_id != src.prod_cat_level_2_id OR
+    tgt.prod_cat_level_2_name != src.prod_cat_level_2_name
+) THEN
+  UPDATE SET
+    tgt.prod_cat_name = src.prod_cat_name,
+    tgt.prod_cat_parent_category_id = src.prod_cat_parent_category_id,
+    tgt.prod_cat_level_1_id = src.prod_cat_level_1_id,
+    tgt.prod_cat_level_1_name = src.prod_cat_level_1_name,
+    tgt.prod_cat_level_2_id = src.prod_cat_level_2_id,
+    tgt.prod_cat_level_2_name = src.prod_cat_level_2_name,
+    tgt._tf_update_date = load_date
+
+-- 2) Insert new records
+WHEN NOT MATCHED THEN
+  INSERT (
+    prod_cat_category_id,
+    prod_cat_name,
+    prod_cat_parent_category_id,
+    prod_cat_level_1_id,
+    prod_cat_level_1_name,
+    prod_cat_level_2_id,
+    prod_cat_level_2_name,
+    _tf_create_date,
+    _tf_update_date
+  )
+  VALUES (
+    src.prod_cat_category_id,
+    src.prod_cat_name,
+    src.prod_cat_parent_category_id,
+    src.prod_cat_level_1_id,
+    src.prod_cat_level_1_name,
+    src.prod_cat_level_2_id,
+    src.prod_cat_level_2_name,
+    load_date,
+    load_date
+  )
+
+-- COMMAND ----------
+
 -- DIM_PRODUCT
--- Source: `silver.product` + `silver.product_model` (enregistrements actifs) → enrichissement avec les infos de modèle
+-- Source: `silver.product` + `silver.product_model` + `gold.dim_product_category` (enregistrements actifs) → enrichissement avec les infos de modèle et catégorie
 MERGE INTO gold.dim_product AS tgt
 USING (
     SELECT
@@ -178,13 +261,15 @@ USING (
         COALESCE(TRY_CAST(p.list_price AS DECIMAL(19, 4)), 0) AS prod_list_price,
         COALESCE(TRY_CAST(p.size AS STRING), 'N/A') AS prod_size,
         COALESCE(TRY_CAST(p.weight AS DECIMAL(19, 4)), 0) AS prod_weight,
-        COALESCE(TRY_CAST(p.product_category_id AS INT), 0) AS prod_product_category_id,
+        COALESCE(pcat._tf_dim_product_category_id, -9) AS _tf_dim_product_category_id,
         COALESCE(TRY_CAST(p.product_model_id AS INT), 0) AS prod_product_model_id,
         COALESCE(TRY_CAST(pm.name AS STRING), 'N/A') AS prod_product_model_name,
         COALESCE(TRY_CAST(pm.catalog_description AS STRING), 'N/A') AS prod_product_model_catalog_description
     FROM silver.product p
     LEFT OUTER JOIN silver.product_model pm
       ON p.product_model_id = pm.product_model_id AND pm._tf_valid_to IS NULL
+    LEFT OUTER JOIN gold.dim_product_category pcat
+      ON p.product_category_id = pcat.prod_cat_category_id
     WHERE p._tf_valid_to IS NULL
 ) AS src
 ON tgt.prod_product_id = src.prod_product_id
@@ -198,7 +283,7 @@ WHEN MATCHED AND (
     tgt.prod_list_price != src.prod_list_price OR
     tgt.prod_size != src.prod_size OR
     tgt.prod_weight != src.prod_weight OR
-    tgt.prod_product_category_id != src.prod_product_category_id OR
+    tgt._tf_dim_product_category_id != src._tf_dim_product_category_id OR
     tgt.prod_product_model_id != src.prod_product_model_id OR
     tgt.prod_product_model_name != src.prod_product_model_name OR
     tgt.prod_product_model_catalog_description != src.prod_product_model_catalog_description
@@ -211,7 +296,7 @@ WHEN MATCHED AND (
     tgt.prod_list_price = src.prod_list_price,
     tgt.prod_size = src.prod_size,
     tgt.prod_weight = src.prod_weight,
-    tgt.prod_product_category_id = src.prod_product_category_id,
+    tgt._tf_dim_product_category_id = src._tf_dim_product_category_id,
     tgt.prod_product_model_id = src.prod_product_model_id,
     tgt.prod_product_model_name = src.prod_product_model_name,
     tgt.prod_product_model_catalog_description = src.prod_product_model_catalog_description,
@@ -228,7 +313,7 @@ WHEN NOT MATCHED THEN
     prod_list_price,
     prod_size,
     prod_weight,
-    prod_product_category_id,
+    _tf_dim_product_category_id,
     prod_product_model_id,
     prod_product_model_name,
     prod_product_model_catalog_description,
@@ -244,7 +329,7 @@ WHEN NOT MATCHED THEN
     src.prod_list_price,
     src.prod_size,
     src.prod_weight,
-    src.prod_product_category_id,
+    src._tf_dim_product_category_id,
     src.prod_product_model_id,
     src.prod_product_model_name,
     src.prod_product_model_catalog_description,
