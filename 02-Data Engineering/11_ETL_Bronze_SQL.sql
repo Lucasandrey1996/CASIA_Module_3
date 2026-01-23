@@ -6,7 +6,7 @@
 
 -- COMMAND ----------
 
-USE CATALOG levkiwi_lakehouse;
+USE CATALOG lua_lakehouse;
 USE DATABASE bronze;
 
 -- COMMAND ----------
@@ -16,18 +16,13 @@ USE DATABASE bronze;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE address 
-AS SELECT * FROM adventureworks.saleslt.address;
-
--- COMMAND ----------
-
 -- MAGIC %md
 -- MAGIC ## Ingestion of SalesOrderDetail
 
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE SalesOrderDetail
-AS SELECT * FROM adventureworks.saleslt.SalesOrderDetail;
+AS SELECT * FROM lua_adventureworks.saleslt.SalesOrderDetail;
 
 -- COMMAND ----------
 
@@ -37,7 +32,7 @@ AS SELECT * FROM adventureworks.saleslt.SalesOrderDetail;
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE SalesOrderHeader
-AS SELECT * FROM adventureworks.saleslt.SalesOrderHeader;
+AS SELECT * FROM lua_adventureworks.saleslt.SalesOrderHeader;
 
 -- COMMAND ----------
 
@@ -47,7 +42,7 @@ AS SELECT * FROM adventureworks.saleslt.SalesOrderHeader;
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE Product
-AS SELECT * FROM adventureworks.saleslt.Product;
+AS SELECT * FROM lua_adventureworks.saleslt.Product;
 
 -- COMMAND ----------
 
@@ -57,7 +52,7 @@ AS SELECT * FROM adventureworks.saleslt.Product;
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE ProductCategory
-AS SELECT * FROM adventureworks.saleslt.ProductCategory;
+AS SELECT * FROM lua_adventureworks.saleslt.ProductCategory;
 
 -- COMMAND ----------
 
@@ -68,8 +63,8 @@ AS SELECT * FROM adventureworks.saleslt.ProductCategory;
 
 -- COMMAND ----------
 
-CREATE OR REPLACE TABLE Address 
-AS SELECT * FROM adventureworks.saleslt.Address;
+CREATE OR REPLACE TABLE address 
+AS SELECT * FROM adventureworks.saleslt.address;
 
 -- COMMAND ----------
 
@@ -79,4 +74,4 @@ AS SELECT * FROM adventureworks.saleslt.Address;
 -- COMMAND ----------
 
 CREATE OR REPLACE TABLE Customer 
-AS SELECT * FROM adventureworks.saleslt.Customer;
+AS SELECT * FROM lua_adventureworks.saleslt.Customer;

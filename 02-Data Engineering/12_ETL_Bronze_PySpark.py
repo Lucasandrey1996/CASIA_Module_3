@@ -7,7 +7,7 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC USE CATALOG levkiwi_lakehouse;
+# MAGIC USE CATALOG lua_lakehouse;
 # MAGIC USE DATABASE bronze;
 
 # COMMAND ----------
@@ -19,13 +19,13 @@
 
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName("loading bronze layer").getOrCreate()
-jdbcHostname = "sql-datasource-dev-001.database.windows.net"
-jdbcDatabase = "sqldb-adventureworks-dev-001"
+jdbcHostname = "sql-lua-datasource-prod-001.database.windows.net"
+jdbcDatabase = "sqldb-lua-adventureworks-prod-001"
 jdbcPort = 1433
 jdbcUrl = "jdbc:sqlserver://{0}:{1};database={2}".format(jdbcHostname, jdbcPort, jdbcDatabase)
 connectionProperties = {
-    "user" : "levkiwi-admin",
-    "password" : "cas-ia2024",
+    "user" : "lua-admin",
+    "password" : "cas-ia2025",
     "driver" : "com.microsoft.sqlserver.jdbc.SQLServerDriver"
 }
 
